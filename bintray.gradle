@@ -1,0 +1,48 @@
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    archiveClassifier = 'javadoc'
+    from javadoc.destinationDir
+
+    manifest {
+        attributes 'Version': "${project.version}"
+    }
+}
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    archiveClassifier = 'sources'
+    from sourceSets.main.allSource
+
+    manifest {
+        attributes 'Version': "${project.version}"
+    }
+}
+
+bintray {
+    user = project.hasProperty('bintrayUser') ? project.property('bintrayUser') : System.getenv('BINTRAY_USER')
+    key = project.hasProperty('bintrayApiKey') ? project.property('bintrayApiKey') : System.getenv('BINTRAY_API_KEY')
+    publications = ['MyPublication']
+
+    pkg {
+        repo = 'maven'
+        name = "${project.group}.${project.name}"
+        userOrg = user
+        vcsUrl = 'https://github.com/xnike/jooq-codegen.git'
+        version {
+            name = "${project.version}"
+            desc = 'Initial version'
+            vcsTag = "${project.version}"
+        }
+    }
+}
+
+publishing {
+    publications {
+        MyPublication(MavenPublication) {
+            from components.java
+            artifact javadocJar
+            artifact sourcesJar
+            groupId "${project.group}"
+            artifactId "${project.group}.${project.name}"
+            version "${project.version}"
+        }
+    }
+}

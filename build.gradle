@@ -1,0 +1,32 @@
+buildscript {
+    repositories {
+        jcenter()
+    }
+}
+
+plugins {
+    id 'com.jfrog.bintray' version '1.8.4'
+    id 'java-library'
+    id 'maven-publish'
+}
+
+group 'me.xnike'
+version '0.0.1'
+
+apply from: 'bintray.gradle'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation group: 'org.jooq', name: 'jooq-codegen', version: "3.13.0"
+}
+
+jar {
+    manifest {
+        attributes 'Version': "${project.version}"
+    }
+}
