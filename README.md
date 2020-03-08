@@ -57,8 +57,8 @@ task jooqCodegen(type: JavaCompile, group: 'build') {
     destinationDir = project.file('src/generated')
     options.compilerArgs = [
             "-proc:only",
-            "-AgenerationToolRunner.baseDir=" + projectDir.path + "/src/main/META-INF/pnl",
-            "-AgenerationToolRunner.configurationFile=" + projectDir.path + "/src/main/META-INF/pnl/jooq.xml",
+            "-AgenerationToolRunner.baseDir=" + projectDir.path + "/src/main/META-INF",
+            "-AgenerationToolRunner.configurationFile=" + projectDir.path + "/src/main/META-INF/jooq.xml",
             "-processor", "com.rbm.jooq.GenerationToolRunnerProcessor",
             "-Xmaxerrs", "1",
             "-Xmaxwarns", "1"

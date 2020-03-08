@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<configuration xmlns="http://www.jooq.org/xsd/jooq-codegen-3.13.0.xsd">
+    <generator>
+        <database>
+            <name>org.jooq.meta.extensions.ddl.DDLDatabase</name>
+            <includes>.*</includes>
+            <includeSystemIndexes>true</includeSystemIndexes>
+            <properties>
+                <property>
+                    <key>defaultNameCase</key>
+                    <value>lower</value>
+                </property>
+                <property>
+                    <key>scripts</key>
+                    <value>*schema1.ddl</value>
+                </property>
+            </properties>
+        </database>
+        <generate>
+            <daos>true</daos>
+            <generatedAnnotation>true</generatedAnnotation>
+            <fluentSetters>true</fluentSetters>
+            <pojos>true</pojos>
+        </generate>
+        <target>
+            <clean>false</clean>
+            <directory>.</directory>
+            <packageName>me.xnike.jooq.codegen</packageName>
+        </target>
+    </generator>
+</configuration>

@@ -15,6 +15,7 @@
 
 package me.xnike.jooq.codegen;
 
+import org.jooq.FilePattern;
 import org.jooq.meta.jaxb.Configuration;
 
 import javax.annotation.processing.AbstractProcessor;
@@ -30,13 +31,18 @@ import javax.tools.StandardLocation;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
+import static java.lang.Math.max;
 import static javax.lang.model.SourceVersion.RELEASE_8;
 import static javax.lang.model.element.ElementKind.CLASS;
 import static javax.tools.Diagnostic.Kind.WARNING;
 import static me.xnike.jooq.codegen.GenerationToolRunnerProcessor.BASE_DIR;
 import static me.xnike.jooq.codegen.GenerationToolRunnerProcessor.CONFIGURATION_FILE_NAME;
+import static me.xnike.jooq.codegen.Tools.getFilePatternBasedir;
+import static me.xnike.jooq.codegen.Tools.getFilePatternPattern;
 import static org.jooq.codegen.GenerationTool.generate;
 import static org.jooq.codegen.GenerationTool.load;
 
@@ -55,14 +61,14 @@ public class GenerationToolRunnerProcessor extends AbstractProcessor {
     public static final String BASE_DIR = "generationToolRunner.baseDir";
 
     private String baseDir;
-    private String configurationFileName;
     private String destinationDir;
+    private String[] configurationFileNames;
 
     @Override
     public synchronized void init(ProcessingEnvironment processingEnv) {
         super.init(processingEnv);
         baseDir = processingEnv.getOptions().get(BASE_DIR);
-        configurationFileName = processingEnv.getOptions().get(CONFIGURATION_FILE_NAME);
+        configurationFileNames = getConfigurationFileNames(processingEnv.getOptions().get(CONFIGURATION_FILE_NAME));
 
         try {
             FileObject fileObject = processingEnv.getFiler().createResource(StandardLocation.SOURCE_OUTPUT, "", "" + System.nanoTime());
@@ -77,17 +83,36 @@ public class GenerationToolRunnerProcessor extends AbstractProcessor {
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
         for (Element annotatedElement : roundEnv.getElementsAnnotatedWith(GenerationToolRunnerMarker.class)) {
             if (CLASS == annotatedElement.getKind()) {
-                try (InputStream in = new FileInputStream(new File(configurationFileName))) {
-                    Configuration configuration = load(in);
-                    configuration.setBasedir(baseDir);
-                    configuration.getGenerator().getTarget().setDirectory(destinationDir);
-                    generate(configuration);
-                } catch (Throwable throwable) {
-                    throwable.printStackTrace();
+                for (String configurationFileName : configurationFileNames) {
+                    try (InputStream in = new FileInputStream(new File(configurationFileName))) {
+                        Configuration configuration = load(in);
+                        configuration.setBasedir(baseDir);
+                        configuration.getGenerator().getTarget().setDirectory(destinationDir);
+                        generate(configuration);
+                    } catch (Throwable throwable) {
+                        throwable.printStackTrace();
+                    }
                 }
             }
         }
 
         return true;
+    }
+
+    private String[] getConfigurationFileNames(String configurationFileName) {
+        configurationFileName = configurationFileName.replaceAll("\\\\", "/");
+        int firstOccurrence = max(configurationFileName.indexOf('*'), configurationFileName.indexOf('?'));
+
+        if (0 > firstOccurrence) {
+            return new String[]{configurationFileName};
+        }
+
+        List<String> configurationFileNames = new ArrayList<>();
+        new FilePattern()
+                .basedir(new File(getFilePatternBasedir(configurationFileName)))
+                .pattern(getFilePatternPattern(configurationFileName))
+                .load(source -> configurationFileNames.add(source.toString().replace("Source (", "").replace(")", "")));
+
+        return configurationFileNames.toArray(new String[0]);
     }
 }
